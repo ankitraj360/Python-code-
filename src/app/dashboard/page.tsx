@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ShieldCheck, 
@@ -9,8 +9,7 @@ import {
   Accessibility, 
   TrendingUp,
   ChevronLeft,
-  AlertCircle,
-  CheckCircle2
+  AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -20,17 +19,54 @@ import Chatbot from '@/components/ui/Chatbot';
 export default function Dashboard() {
   const [analysis, setAnalysis] = useState<any>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  const refId = useMemo(() => Math.random().toString(36).substr(2, 9).toUpperCase(), []);
 
   useEffect(() => {
     const saved = sessionStorage.getItem('lastAnalysis');
     if (saved) {
       try {
-        setAnalysis(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.scores) {
+          setAnalysis(parsed);
+        } else {
+          setHasError(true);
+        }
       } catch (e) {
         console.error("Failed to parse analysis data", e);
+        setHasError(true);
       }
+    } else {
+      // If no data found after a short delay, show error
+      const timer = setTimeout(() => {
+        if (!sessionStorage.getItem('lastAnalysis')) {
+          setHasError(true);
+        }
+      }, 3000);
+      return () => clearTimeout(timer);
     }
   }, []);
+
+  if (hasError) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white p-6 text-center">
+        <div className="w-16 h-16 bg-red-500/20 rounded-full mb-6 flex items-center justify-center border border-red-500/50">
+          <AlertCircle className="text-red-500" size={32} />
+        </div>
+        <h2 className="text-2xl font-bold mb-2">Analysis Data Missing</h2>
+        <p className="text-white/60 mb-8 max-w-md">
+          We couldn&apos;t find your analysis results. This can happen if you refresh the page or navigate directly here.
+        </p>
+        <Link 
+          href="/"
+          className="px-8 py-3 bg-white text-black rounded-xl font-bold hover:bg-neon-blue transition-all"
+        >
+          Return to Home
+        </Link>
+      </div>
+    );
+  }
 
   if (!analysis || !analysis.scores) {
     return (
@@ -68,7 +104,7 @@ export default function Dashboard() {
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
               Analysis <span className="text-neon-blue">Report</span>
             </h1>
-            <p className="text-white/60 mt-2 font-mono text-sm tracking-tighter">REF_ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
+            <p className="text-white/60 mt-2 font-mono text-sm tracking-tighter">REF_ID: {refId}</p>
           </div>
           <div className="flex gap-4">
             <button 

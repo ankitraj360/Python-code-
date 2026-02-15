@@ -2,14 +2,26 @@ import * as cheerio from "cheerio";
 
 export async function scrapeWebsite(url: string) {
   try {
+    // Validate URL structure one more time
+    try {
+      new URL(url);
+    } catch {
+      throw new Error("The URL entered is invalid. Please enter a complete URL starting with https://");
+    }
+
     const response = await fetch(url, {
+      method: 'GET',
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       },
+      next: { revalidate: 0 } // Ensure we don't get cached 404s
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch website: ${response.statusText}`);
+      if (response.status === 404) {
+        throw new Error("The website could not be found (404). Please check the URL and try again.");
+      }
+      throw new Error(`The website could not be reached (Status: ${response.status}). Please ensure the URL is correct and public.`);
     }
 
     const html = await response.text();
@@ -89,8 +101,11 @@ export async function scrapeWebsite(url: string) {
       textPreview: $("body").text().replace(/\s\s+/g, ' ').substring(0, 5000), // Cleaned body text
       html: html.substring(0, 25000), // Maximize HTML context
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Scraping error:", error);
+    if (error.code === 'ENOTFOUND' || error.message?.includes('fetch failed')) {
+      throw new Error("Could not connect to the website. Please check if the URL exists and is entered correctly.");
+    }
     throw error;
   }
 }

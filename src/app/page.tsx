@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Scene from '@/components/three/Scene';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Loader2, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Footer from '@/components/ui/Footer';
@@ -10,18 +10,35 @@ import Footer from '@/components/ui/Footer';
 export default function Home() {
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url) return;
+    setError(null);
+
+    let targetUrl = url.trim();
+    
+    // Auto-fix missing protocol
+    if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+      targetUrl = `https://${targetUrl}`;
+      setUrl(targetUrl);
+    }
+
+    // Basic regex for domain validation
+    const domainRegex = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?$/;
+    if (!domainRegex.test(targetUrl)) {
+      setError('Please enter a valid website URL');
+      return;
+    }
 
     setIsLoading(true);
     try {
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url: targetUrl }),
       });
       const data = await response.json();
       
@@ -29,10 +46,10 @@ export default function Home() {
         sessionStorage.setItem('lastAnalysis', JSON.stringify(data.data));
         router.push('/dashboard');
       } else {
-        alert(data.error || 'Something went wrong');
+        setError(data.error || 'Something went wrong');
       }
-    } catch (err) {
-      alert('Failed to connect to server');
+    } catch {
+      setError('Failed to connect to server. Please check your internet connection.');
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +94,10 @@ export default function Home() {
                 required
                 className="flex-1 bg-transparent border-none focus:ring-0 text-white p-4 text-lg outline-none placeholder:text-white/20"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={(e) => {
+                  setUrl(e.target.value);
+                  if (error) setError(null);
+                }}
               />
               <button
                 disabled={isLoading}
@@ -93,6 +113,20 @@ export default function Home() {
               </button>
             </div>
           </form>
+          
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute left-0 right-0 mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center justify-center gap-2"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </div>
 

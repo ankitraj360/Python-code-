@@ -24,8 +24,8 @@ export async function POST(req: NextRequest) {
     }
 
     const models = [
-      "google/gemini-2.0-flash-lite-preview-02-05",
-      "google/gemini-2.0-flash-exp",
+      "google/gemini-2.0-flash-001",
+      "google/gemini-flash-1.5",
       "deepseek/deepseek-chat",
       "meta-llama/llama-3.1-8b-instruct"
     ];

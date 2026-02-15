@@ -18,7 +18,9 @@ export async function analyzeWebsite(data: any) {
   }
 
   const models = [
-    "meta-llama/llama-3.1-8b-instruct"
+    "google/gemini-2.0-flash-001",
+    "meta-llama/llama-3.1-8b-instruct",
+    "mistralai/mistral-7b-instruct"
   ];
 
   let lastError = null;
@@ -81,34 +83,72 @@ export async function analyzeWebsite(data: any) {
             content: `Analyze this data: ${JSON.stringify(data)}`
           }
         ],
+        response_format: { type: "json_object" }
       });
 
       const content = response.choices[0].message.content || "{}";
       console.log(`[OpenRouter] Raw response from ${model}:`, content.substring(0, 500) + (content.length > 500 ? "..." : ""));
       
-      // Step 1: Extract anything that looks like a JSON object
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      let jsonString = jsonMatch ? jsonMatch[0] : content;
+      // Step 1: Extract JSON more robustly
+      let jsonString = content;
+      const startIdx = content.indexOf('{');
+      const endIdx = content.lastIndexOf('}');
+      
+      if (startIdx !== -1) {
+        if (endIdx !== -1 && endIdx > startIdx) {
+          jsonString = content.substring(startIdx, endIdx + 1);
+        } else {
+          // Truncated JSON - starts but doesn't end
+          jsonString = content.substring(startIdx);
+        }
+      }
 
       // Step 2: Clean up common LLM artifacts
       jsonString = jsonString
         .replace(/```json\n?|\n?```/g, "") // Remove markdown blocks
-        .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ") // Remove control characters that break JSON.parse
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ") // Remove control characters
         .trim();
       
+      // Step 3: Attempt to fix common issues before parsing
+      const repairJSON = (str: string) => {
+        let repaired = str;
+        
+        // Fix unescaped newlines inside strings
+        repaired = repaired.replace(/(?<=: \".*)\n(?=.*\"[,\}])/g, "\\n");
+
+        // Fix missing commas between properties (e.g., "key": "val" "next": "val")
+        repaired = repaired.replace(/(?<=[0-9"\]\}])\s*\n?\s*"/g, ',\n"');
+        
+        // Fix missing closing braces if truncated
+        let openBraces = (repaired.match(/\{/g) || []).length;
+        let closeBraces = (repaired.match(/\}/g) || []).length;
+        while (openBraces > closeBraces) {
+          repaired += "}";
+          closeBraces++;
+        }
+
+        // Fix missing closing brackets for arrays
+        let openBackets = (repaired.match(/\[/g) || []).length;
+        let closeBackets = (repaired.match(/\]/g) || []).length;
+        while (openBackets > closeBackets) {
+          repaired += "]";
+          closeBackets++;
+        }
+        
+        return repaired;
+      };
+
       try {
         return JSON.parse(jsonString);
       } catch (e) {
-        console.warn(`[OpenRouter] Standard JSON.parse failed, attempting aggressive repair...`);
-        
-        // Step 3: Aggressive repair for common Llama 8b issues
-        // Fix unescaped newlines inside strings
-        let repaired = jsonString.replace(/(?<=: \".*)\n(?=.*\"[,\}])/g, "\\n");
+        console.warn(`[OpenRouter] Standard JSON.parse failed, attempting repair...`);
+        const repaired = repairJSON(jsonString);
         
         try {
           return JSON.parse(repaired);
         } catch (innerError) {
           console.error(`[OpenRouter] All JSON parsing attempts failed for ${model}`);
+          // Try one last desperate attempt: find the last valid comma/brace and close it
           throw innerError;
         }
       }
@@ -126,20 +166,38 @@ function getMockAnalysis() {
   return {
     overallRating: 8.5,
     scores: {
-      design: 8,
-      performance: 7,
-      seo: 9,
-      accessibility: 8,
-      conversion: 7
+      technical: 82,
+      seo: 91,
+      content: 78,
+      ux: 85,
+      conversion: 72,
+      authority: 88
     },
-    pros: ["Clean layout", "Fast initial load", "Mobile responsive"],
-    cons: ["Low contrast in footer", "Missing alt tags on some images", "Vague CTA"],
-    mistakes: ["Multiple H1 tags", "Non-descriptive link text"],
+    probabilities: {
+      rankingImprovement: 0.85,
+      conversionImprovement: 0.65
+    },
+    technicalDeepDive: {
+      architecture: "Modern Next.js Architecture with Tailwind CSS and Framer Motion for high-performance interactions.",
+      potentialBottlenecks: ["Large image assets", "Unused CSS in third-party libraries"],
+      modernityScore: 92
+    },
     improvements: [
-      { priority: "High", task: "Improve CTA visibility" },
-      { priority: "Medium", task: "Add aria-labels to buttons" }
+      { priority: "High", task: "Optimize Hero Images", reason: "LCP is currently 2.4s, which is near the threshold.", impact: "Faster perceived load time" },
+      { priority: "Medium", task: "Enhance Aria Labels", reason: "Some interactive elements lack clear labels for screen readers.", impact: "Improved accessibility" },
+      { priority: "Low", task: "Minify Legacy Scripts", reason: "Small amount of dead code detected in polyfills.", impact: "Reduced bundle size" }
     ],
-    founderSummary: "A solid start with clear SEO potential, but needs better conversion optimization and accessibility fixes to truly scale.",
-    startupReadinessScore: 78
+    founderSummary: "Your website demonstrates strong technical foundations and excellent SEO hygiene. Focus on tightening the conversion funnel and optimizing asset delivery to achieve top-tier performance scores.",
+    startupReadinessScore: 84,
+    quickWins: [
+      "Compress main hero images using WebP",
+      "Add missing alt tags to footer icons",
+      "Update meta description for better CTR"
+    ],
+    longTermRoadmap: [
+      "Implement automated A/B testing for CTA buttons",
+      "Migration to edge-based image optimization",
+      "Develop a more comprehensive content clusters strategy"
+    ]
   };
 }

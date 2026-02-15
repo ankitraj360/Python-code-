@@ -4,7 +4,7 @@ import { analyzeWebsite } from "@/lib/openai";
 import { z } from "zod";
 
 const AnalyzeSchema = z.object({
-  url: z.string().url(),
+  url: z.string().url("Please enter a valid website URL (e.g., https://example.com)"),
 });
 
 export async function POST(req: NextRequest) {
@@ -21,6 +21,19 @@ export async function POST(req: NextRequest) {
     // Step 3: Send to OpenAI for analysis
     console.log(`[SiteScope AI] Sending data to OpenRouter (Gemini Flash) for audit...`);
     const analysis = await analyzeWebsite(siteData);
+    
+    // Safety check for dashboard
+    if (!analysis.scores) {
+      console.warn("[SiteScope AI] Analysis missing scores, applying fallback structure");
+      analysis.scores = {
+        technical: 50,
+        seo: 50,
+        content: 50,
+        ux: 50,
+        conversion: 50
+      };
+    }
+
     console.log(`[SiteScope AI] Analysis complete for ${url}`);
 
     return NextResponse.json({
@@ -29,8 +42,17 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("API Error:", error);
+    
+    let errorMessage = "Failed to analyze website";
+    
+    if (error instanceof z.ZodError) {
+      errorMessage = error.errors[0]?.message || "Invalid input";
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to analyze website" },
+      { success: false, error: errorMessage },
       { status: 400 }
     );
   }

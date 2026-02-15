@@ -1,0 +1,40 @@
+
+> sitescope-ai@0.1.0 dev
+> next dev
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://10.0.1.232:3000
+- Environments: .env.local
+
+✓ Starting...
+✓ Ready in 986ms
+[SiteScope AI] Starting analysis for: https://scale.com
+[SiteScope AI] Scraping website content...
+[SiteScope AI] Scraped successfully. Title: "Reliable AI Systems for the World's Most Important Decisions | Scale AI"
+[SiteScope AI] Sending data to OpenRouter (Gemini Flash) for audit...
+[OpenRouter] Attempting analysis with meta-llama/llama-3.1-8b-instruct...
+[OpenRouter] Raw response from meta-llama/llama-3.1-8b-instruct: {
+  "overallRating": 8,
+  "scores": {
+    "technical": 85,
+    "seo": 90,
+    "content": 80,
+    "ux": 90,
+    "conversion": 80,
+    "authority": 90
+  },
+  "pros": [
+    "Modern design patterns used",
+    "Good SEO practices followed",
+    "Robust structural hierarchy"
+  ],
+  "cons": [
+    "Large number of scripts and stylesheets loaded",
+    "Some accessibility issues with image alt tags and input labels",
+    "Conversion elements could be improved"
+  ],
+  "mistakes": [
+    "Some HTML elements ...
+[SiteScope AI] Analysis complete for https://scale.com
+ POST /api/analyze 200 in 16.1s (compile: 1214ms, render: 14.8s)

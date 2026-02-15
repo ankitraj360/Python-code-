@@ -15,9 +15,11 @@ import {
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { RadarChart } from '@/components/ui/RadarChart';
+import Chatbot from '@/components/ui/Chatbot';
 
 export default function Dashboard() {
   const [analysis, setAnalysis] = useState<any>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     const saved = sessionStorage.getItem('lastAnalysis');
@@ -43,10 +45,10 @@ export default function Dashboard() {
 
   const scores = analysis.scores;
   const scoreItems = [
-    { label: 'Design', value: scores.design || 0, icon: ShieldCheck, color: 'text-blue-400' },
-    { label: 'Performance', value: scores.performance || 0, icon: Zap, color: 'text-yellow-400' },
+    { label: 'Technical', value: scores.technical || 0, icon: Zap, color: 'text-yellow-400' },
     { label: 'SEO', value: scores.seo || 0, icon: Search, color: 'text-green-400' },
-    { label: 'Accessibility', value: scores.accessibility || 0, icon: Accessibility, color: 'text-purple-400' },
+    { label: 'Content', value: scores.content || 0, icon: ShieldCheck, color: 'text-blue-400' },
+    { label: 'UX', value: scores.ux || 0, icon: Accessibility, color: 'text-purple-400' },
     { label: 'Conversion', value: scores.conversion || 0, icon: TrendingUp, color: 'text-pink-400' },
   ];
 
@@ -69,7 +71,16 @@ export default function Dashboard() {
             <p className="text-white/60 mt-2 font-mono text-sm tracking-tighter">REF_ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
           </div>
           <div className="flex gap-4">
-            <div className="px-4 py-2 bg-neon-blue/10 text-neon-blue rounded-full text-xs font-bold tracking-widest uppercase border border-neon-blue/20">
+            <button 
+              onClick={() => {
+                const chatbotToggle = document.querySelector('[data-chatbot-toggle]') as HTMLButtonElement;
+                if (chatbotToggle) chatbotToggle.click();
+              }}
+              className="px-6 py-2 bg-white text-black rounded-full text-xs font-bold tracking-widest uppercase hover:bg-neon-blue transition-all"
+            >
+              Chat with AI
+            </button>
+            <div className="px-4 py-2 bg-neon-blue/10 text-neon-blue rounded-full text-xs font-bold tracking-widest uppercase border border-neon-blue/20 hidden md:block">
               Verified Analysis
             </div>
           </div>
@@ -125,28 +136,41 @@ export default function Dashboard() {
               </div>
             </motion.div>
 
-            {/* Audience Archetypes */}
+            {/* Improvement Probabilities */}
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
               className="glass p-8 rounded-3xl"
             >
-              <h3 className="text-xl font-bold mb-6 text-neon-blue">Audience Archetypes</h3>
+              <h3 className="text-xl font-bold mb-6 text-neon-blue">Growth Potential</h3>
               <div className="space-y-6">
-                {analysis.personas?.map((persona: any) => (
-                  <div key={persona.name} className="p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-neon-blue/20 transition-colors">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-bold text-neon-blue uppercase tracking-widest">{persona.name}</span>
-                      <span className="text-[10px] font-mono opacity-50">
-                        {persona.investmentReady !== undefined ? `Investment Ready: ${persona.investmentReady ? 'YES' : 'NO'}` : 
-                         persona.frustrationLevel !== undefined ? `Frustration: ${persona.frustrationLevel}/10` :
-                         `Clarity: ${persona.clarityScore}/10`}
-                      </span>
-                    </div>
-                    <p className="text-xs text-white/60 leading-relaxed">{persona.feedback}</p>
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-bold uppercase tracking-widest text-white/60">Ranking Probability</span>
+                    <span className="text-neon-blue font-mono font-bold">{Math.round((analysis.probabilities?.rankingImprovement || 0) * 100)}%</span>
                   </div>
-                ))}
+                  <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(analysis.probabilities?.rankingImprovement || 0) * 100}%` }}
+                      className="h-full bg-neon-blue shadow-[0_0_10px_rgba(0,242,255,0.5)]"
+                    />
+                  </div>
+                </div>
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-bold uppercase tracking-widest text-white/60">Conversion Lift</span>
+                    <span className="text-neon-purple font-mono font-bold">{Math.round((analysis.probabilities?.conversionImprovement || 0) * 100)}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(analysis.probabilities?.conversionImprovement || 0) * 100}%` }}
+                      className="h-full bg-neon-purple shadow-[0_0_10px_rgba(188,19,254,0.5)]"
+                    />
+                  </div>
+                </div>
               </div>
             </motion.div>
 
@@ -156,7 +180,7 @@ export default function Dashboard() {
               transition={{ delay: 0.4 }}
               className="glass p-8 rounded-3xl"
             >
-              <h3 className="text-xl font-bold mb-6 text-neon-purple">Market Potential</h3>
+              <h3 className="text-xl font-bold mb-6 text-neon-purple">Signal Analysis</h3>
               <RadarChart scores={scores} />
             </motion.div>
           </div>
@@ -173,7 +197,7 @@ export default function Dashboard() {
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-bold">Technical Architecture</h3>
                 <div className="text-xs font-mono text-neon-blue bg-neon-blue/10 px-3 py-1 rounded-full">
-                  Modernity: {analysis.technicalDeepDive?.modernityScore || 0}/100
+                  Modernity: {analysis.technicalDeepDive?.modernityScore || 0}%
                 </div>
               </div>
               <p className="text-sm text-white/70 mb-6 leading-relaxed">
@@ -202,7 +226,7 @@ export default function Dashboard() {
                 <div key={item.label} className="glass p-4 rounded-2xl text-center">
                   <item.icon className={cn("w-6 h-6 mx-auto mb-2", item.color)} />
                   <div className="text-xs text-white/40 uppercase tracking-tighter mb-1">{item.label}</div>
-                  <div className="text-xl font-bold">{item.value}/10</div>
+                  <div className="text-xl font-bold">{item.value}%</div>
                 </div>
               ))}
             </motion.div>
@@ -281,6 +305,7 @@ export default function Dashboard() {
 
         </div>
       </div>
+      <Chatbot analysisContext={analysis} />
     </div>
   );
 }

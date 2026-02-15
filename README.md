@@ -1,86 +1,75 @@
-# SiteScope AI - AI-Powered Website Intelligence
+# SiteScope AI - Advanced Website Intelligence & Strategic Audit
 
-SiteScope AI is a futuristic, 3D-immersive website auditor that provides deep technical and strategic insights into any URL. Using advanced web scraping and AI analysis, it generates comprehensive reports on Design, Performance, SEO, Accessibility, and Conversion potential.
-
-![SiteScope AI Preview](https://via.placeholder.com/1200x600?text=SiteScope+AI+Dashboard+Preview)
+SiteScope AI is a futuristic, AI-driven website auditor that provides high-dimensional technical and strategic insights. It moves beyond basic metrics to analyze websites through a framework of **10 distinct signal categories**, delivering hyper-accurate growth and conversion probabilities.
 
 ## 🚀 Features
 
+- **10-Signal Framework:** Analyzes Structural, Technical, SEO, Content, Conversion, Security, and Competitive signals.
+- **Llama 3.1 8B Powered:** Specifically optimized for the `meta-llama/llama-3.1-8b-instruct` model for high-conviction audits.
 - **3D Immersive UI:** Built with React Three Fiber and Three.js for a cutting-edge visual experience.
-- **Intelligent Web Scraping:** Comprehensive metadata, semantic structure, and technical asset extraction using Cheerio.
-- **Multi-Model AI Audit:** Leverages OpenRouter to analyze websites using top-tier models like Gemini 2.0 Flash, Llama 3.1, and DeepSeek.
-- **Deep Technical Analysis:** Evaluates architecture, modernity scores, and identifies potential bottlenecks.
-- **Persona-Based Feedback:** Get specific critiques from the perspective of a VC, a Power User, and a First-time Visitor.
-- **Actionable Roadmap:** Provides "Quick Wins" and a "Long-term Roadmap" for website growth.
-- **Interactive Dashboard:** Dynamic data visualization including a Market Potential Radar Chart.
+- **Intelligent Web Scraping:** Comprehensive metadata and technical asset extraction using Cheerio.
+- **Robust JSON Analysis:** Advanced multi-step parsing and auto-repair logic to handle high-dimensional AI outputs.
+- **Strategic Growth Probabilities:** Predicts Ranking Improvement and Conversion Lift probabilities (0-100%).
+- **Interactive Signal Dashboard:** Modern data visualization using Radar Charts and Score Metrics (0-100%).
+- **Dark-Blue AI Assistant:** Integrated chatbot for deep-diving into analysis reports.
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** [Next.js 15+](https://nextjs.org/) (App Router), [TypeScript](https://www.typescriptlang.org/)
-- **Styling:** [Tailwind CSS](https://tailwindcss.com/), [Framer Motion](https://www.framer.com/motion/), [GSAP](https://greensock.com/gsap/)
-- **3D Graphics:** [Three.js](https://threejs.org/), [@react-three/fiber](https://github.com/pmndrs/react-three-fiber), [@react-three/drei](https://github.com/pmndrs/drei)
-- **Backend:** Next.js API Routes
+- **Frontend:** [Next.js 16](https://nextjs.org/) (App Router), [TypeScript](https://www.typescriptlang.org/), [Tailwind CSS 4](https://tailwindcss.com/)
+- **Animation:** [Framer Motion 12](https://www.framer.com/motion/), [GSAP](https://greensock.com/gsap/)
+- **3D Graphics:** [Three.js](https://threejs.org/), [@react-three/fiber](https://github.com/pmndrs/react-three-fiber)
+- **AI Integration:** [OpenRouter](https://openrouter.ai/) (Llama 3.1 8B Instruct)
 - **Scraping:** [Cheerio](https://cheerio.js.org/)
-- **AI Integration:** [OpenAI SDK](https://github.com/openai/openai-node) (via [OpenRouter](https://openrouter.ai/))
-- **Validation:** [Zod](https://zod.dev/)
 
-## 📋 Project Structure
+## 📋 Analysis Framework (Signals)
 
-```text
-src/
-├── app/                  # Next.js App Router
-│   ├── api/analyze/      # Backend API for scraping & AI analysis
-│   ├── dashboard/        # Results display dashboard
-│   └── page.tsx          # Landing page with 3D scene
-├── components/           # React Components
-│   ├── three/            # 3D Scene and objects (Scene, FloatingCube)
-│   └── ui/               # Reusable UI components (Footer, RadarChart)
-├── lib/                  # Utilities and Services
-│   ├── openai.ts         # OpenRouter/OpenAI integration logic
-│   ├── scraper.ts        # Cheerio-based web scraping logic
-│   └── utils.ts          # Tailwind CSS class merging utility
-```
+The system evaluates websites across 10 core dimensions:
+1. **Structural:** Page hierarchy, link graph, and crawl budget.
+2. **Technical:** Core Web Vitals (LCP, CLS, INP), TTFB, and asset optimization.
+3. **SEO:** HTML signals, keyword presence, and schema completeness.
+4. **Content Intelligence:** Semantic relevance, search intent, and E-E-A-T.
+5. **User Behavior:** Engagement and exit probabilities.
+6. **Conversion:** CTA visibility, social proof, and funnel friction.
+7. **Authority:** Domain and backlink velocity (competitive gap).
+8. **Security:** HTTPS, security headers, and trust markers.
+9. **Competitive Gap:** Authority, UX, and Speed gaps against competitors.
+10. **Growth Probabilities:** Calculated likelihood of SEO and Conversion success.
 
 ## 🚦 Getting Started
 
-### Prerequisites
-
-- Node.js 18+ 
-- npm / yarn / pnpm
-- An API Key from [OpenRouter](https://openrouter.ai/) or [OpenAI](https://openai.com/)
-
 ### Installation
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/your-username/sitescope-ai.git
-   cd sitescope-ai
-   ```
-
-2. **Install dependencies:**
+1. **Clone and Install:**
    ```bash
    npm install
    ```
 
-3. **Set up environment variables:**
-   Create a `.env.local` file in the root directory and add your API key:
+2. **Set up environment variables:**
+   Create a `.env.local` file:
    ```env
    OPENAI_API_KEY=your_openrouter_api_key_here
    ```
 
-4. **Run the development server:**
+3. **Run Development:**
    ```bash
    npm run dev
    ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🧠 Project Structure
 
-## 🧠 How it Works
-
-1. **Input:** The user enters a URL on the home page.
-2. **Scrape:** The system fetches the website's HTML and extracts metadata, headings, scripts, stylesheets, and accessibility markers.
-3. **Analyze:** The extracted data is sent to a suite of AI models. The models evaluate the site across multiple dimensions and return a structured JSON report.
-4. **Visualize:** The dashboard parses this report to generate interactive charts, scores, and detailed strategic advice.
+```text
+src/
+├── app/
+│   ├── api/analyze/      # High-dimensional signal processing
+│   ├── api/chat/         # AI Assistant endpoint with model fallback
+│   └── dashboard/        # Signal-based visualization dashboard
+├── components/
+│   ├── three/            # 3D Scene (Scene, FloatingCube)
+│   └── ui/               # Chatbot (Navy Theme), RadarChart (Signal Sync)
+├── lib/
+│   ├── openai.ts         # Robust JSON parsing & Signal framework logic
+│   └── signals.md        # Reference documentation for audit signals
+```
 
 ## 📄 License
 

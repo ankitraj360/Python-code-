@@ -4,11 +4,12 @@ import { motion } from 'framer-motion';
 
 interface RadarChartProps {
   scores: {
-    design: number;
-    performance: number;
+    technical: number;
     seo: number;
-    accessibility: number;
+    content: number;
+    ux: number;
     conversion: number;
+    authority: number;
   };
 }
 
@@ -18,18 +19,20 @@ export function RadarChart({ scores }: RadarChartProps) {
   const radius = size * 0.4;
   
   const categories = [
-    { key: 'design', label: 'Design' },
-    { key: 'performance', label: 'Performance' },
+    { key: 'technical', label: 'Technical' },
     { key: 'seo', label: 'SEO' },
-    { key: 'accessibility', label: 'Accessibility' },
+    { key: 'content', label: 'Content' },
+    { key: 'ux', label: 'UX' },
     { key: 'conversion', label: 'Conversion' },
+    { key: 'authority', label: 'Authority' },
   ];
 
   const angleStep = (Math.PI * 2) / categories.length;
 
   const getPoint = (score: number, index: number, maxRadius: number) => {
     const angle = index * angleStep - Math.PI / 2;
-    const r = (score / 10) * maxRadius;
+    // New scores are 0-100, so we divide by 100
+    const r = (Math.min(100, Math.max(0, score)) / 100) * maxRadius;
     return {
       x: center + r * Math.cos(angle),
       y: center + r * Math.sin(angle),
@@ -44,7 +47,7 @@ export function RadarChart({ scores }: RadarChartProps) {
       <svg width={size} height={size} className="overflow-visible">
         {/* Background Hexagons */}
         {[0.2, 0.4, 0.6, 0.8, 1].map((scale) => {
-          const bgPoints = categories.map((_, i) => getPoint(10 * scale, i, radius));
+          const bgPoints = categories.map((_, i) => getPoint(100 * scale, i, radius));
           const bgPath = bgPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
           return (
             <path
@@ -60,7 +63,7 @@ export function RadarChart({ scores }: RadarChartProps) {
 
         {/* Axis Lines */}
         {categories.map((_, i) => {
-          const p = getPoint(10, i, radius);
+          const p = getPoint(100, i, radius);
           return (
             <line
               key={i}
@@ -89,7 +92,7 @@ export function RadarChart({ scores }: RadarChartProps) {
 
         {/* Labels */}
         {categories.map((cat, i) => {
-          const p = getPoint(11.5, i, radius);
+          const p = getPoint(115, i, radius);
           return (
             <text
               key={i}

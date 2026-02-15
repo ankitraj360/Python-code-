@@ -18,10 +18,7 @@ export async function analyzeWebsite(data: any) {
   }
 
   const models = [
-    "google/gemini-2.0-flash-lite-preview-02-05",
-    "google/gemini-2.0-flash-exp",
-    "meta-llama/llama-3.1-8b-instruct",
-    "deepseek/deepseek-chat"
+    "meta-llama/llama-3.1-8b-instruct"
   ];
 
   let lastError = null;
@@ -34,64 +31,86 @@ export async function analyzeWebsite(data: any) {
         messages: [
           {
             role: "system",
-            content: `You are the world's most advanced AI Website Strategist and Technical Auditor. 
-            You are analyzing "Big Data" extracted from a website, including full metadata, semantic structure, script behaviors, design patterns, and conversion funnels.
+            content: `You are an expert Website Auditor. Analyze the provided website data using the following high-dimensional signal framework:
+
+            1. Structural: Page type, URL depth, link graph, crawl budget.
+            2. Technical: LCP, CLS, INP, TTFB, bundle sizes, mobile performance.
+            3. HTML/SEO: Hierarchy, keyword presence (Title/H1/First Para), schema, canonicals.
+            4. Content Intelligence: Depth, semantic relevance, search intent, E-E-A-T indicators.
+            5. Conversion: CTA visibility, social proof, funnel friction.
+            6. Security/Trust: HTTPS, security headers, policy presence.
+
+            Return a comprehensive report in EXCLUSIVELY JSON format.
             
-            Your goal is to provide a hyper-accurate, high-conviction audit that feels like it was written by a team of elite designers, engineers, and marketers.
-            
-            Return a comprehensive report in strict JSON format.
-            
-            The JSON must follow this exact structure:
+            JSON structure:
             {
               "overallRating": number (1-10),
-              "scores": {
-                "design": number (1-10),
-                "performance": number (1-10),
-                "seo": number (1-10),
-                "accessibility": number (1-10),
-                "conversion": number (1-10)
+              "scores": { 
+                "technical": number (0-100),
+                "seo": number (0-100),
+                "content": number (0-100),
+                "ux": number (0-100),
+                "conversion": number (0-100),
+                "authority": number (0-100)
               },
               "pros": string[],
               "cons": string[],
               "mistakes": string[],
-              "technicalDeepDive": {
-                "architecture": string,
-                "potentialBottlenecks": string[],
-                "modernityScore": number
+              "technicalDeepDive": { 
+                "architecture": string, 
+                "potentialBottlenecks": string[], 
+                "modernityScore": number (0-100) 
               },
-              "improvements": [
-                { "priority": "High" | "Medium" | "Low", "task": string, "reason": string, "impact": string }
+              "improvements": [ 
+                { "priority": "High" | "Medium" | "Low", "task": string, "reason": string, "impact": string } 
               ],
-              "personas": [
-                { "name": "Venture Capitalist", "feedback": string, "investmentReady": boolean },
-                { "name": "Power User", "feedback": string, "frustrationLevel": number },
-                { "name": "First-time Visitor", "feedback": string, "clarityScore": number }
-              ],
+              "probabilities": {
+                "rankingImprovement": number (0-1),
+                "conversionImprovement": number (0-1)
+              },
               "founderSummary": string,
               "startupReadinessScore": number (0-100),
               "quickWins": string[],
               "longTermRoadmap": string[]
-            }`
+            }
+            
+            Important: Do not include any text, markdown, or commentary outside of the JSON object.`
           },
           {
             role: "user",
-            content: `Analyze this Big Data dump for the website: ${JSON.stringify(data)}`
+            content: `Analyze this data: ${JSON.stringify(data)}`
           }
         ],
       });
 
       const content = response.choices[0].message.content || "{}";
+      console.log(`[OpenRouter] Raw response from ${model}:`, content.substring(0, 500) + (content.length > 500 ? "..." : ""));
       
-      // Attempt to extract JSON if the model included conversational text
+      // Step 1: Extract anything that looks like a JSON object
       const jsonMatch = content.match(/\{[\s\S]*\}/);
-      const jsonString = jsonMatch ? jsonMatch[0] : content;
+      let jsonString = jsonMatch ? jsonMatch[0] : content;
+
+      // Step 2: Clean up common LLM artifacts
+      jsonString = jsonString
+        .replace(/```json\n?|\n?```/g, "") // Remove markdown blocks
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ") // Remove control characters that break JSON.parse
+        .trim();
       
       try {
         return JSON.parse(jsonString);
       } catch (e) {
-        // One last attempt: clean common markdown markers
-        const cleaned = jsonString.replace(/```json\n?|\n?```/g, "").trim();
-        return JSON.parse(cleaned);
+        console.warn(`[OpenRouter] Standard JSON.parse failed, attempting aggressive repair...`);
+        
+        // Step 3: Aggressive repair for common Llama 8b issues
+        // Fix unescaped newlines inside strings
+        let repaired = jsonString.replace(/(?<=: \".*)\n(?=.*\"[,\}])/g, "\\n");
+        
+        try {
+          return JSON.parse(repaired);
+        } catch (innerError) {
+          console.error(`[OpenRouter] All JSON parsing attempts failed for ${model}`);
+          throw innerError;
+        }
       }
     } catch (error: any) {
       console.error(`[OpenRouter] Error with model ${model}:`, error.message);
